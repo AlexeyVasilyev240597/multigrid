@@ -1,5 +1,5 @@
 % Class 'ellipticProblemSolver' implements a solver of elliptic problem,
-% include iteration methods: Jacobi, Seidel, SOR and multigrid
+% includes iteration methods: Jacobi, Seidel, SOR and multigrid
 classdef ellipticProblemSolver < handle
     properties (Access = public)
         % grid
@@ -24,7 +24,7 @@ classdef ellipticProblemSolver < handle
         k_max = [];
         % accuracy
         eps = []; 
-                            
+
         % params of MG method
         nu_1 = [];
         nu_2 = [];
@@ -33,7 +33,6 @@ classdef ellipticProblemSolver < handle
     end
     
     methods (Access = public)
-        % constructor of class
         function obj = ellipticProblemSolver(c, e_l, N,...
                 a_coeff, b_coeff, q_coeff,...
                 f, border, u_ex)
@@ -44,27 +43,30 @@ classdef ellipticProblemSolver < handle
             obj.u_ex = u_ex;
         end       
         
-        % func returns vector with values of solution in border and
-        % zeros in inner nodes
+        % PARAM IN:
+        %   * grid_m - object of gridClass
+        % PARAM_OUT:
+        %   * border_vec - a vector with values of solution in border
         function border_vec = fillBorder(obj, grid_m)
             N = grid_m.N;
             border_vec = zeros(N + 2);
             
-            %left
+            % left
             [x, y] = grid_m.leftEdge();
             border_vec(:, 1)   = obj.border(x, y);
-            %right
+            % right
             [x, y] = grid_m.rightEdge();
             border_vec(:, end) = obj.border(x, y);
-            %bottom
+            % bottom
             [x, y] = grid_m.bottomEdge();
             border_vec(1,   :) = obj.border(x, y);
-            %top
+            % top
             [x, y] = grid_m.topEdge();
             border_vec(end, :) = obj.border(x, y);               
         end
         
-        % func returns vector -- right part of finite difference equation
+        % PARAM_OUT:
+        %   * g_vec - right part of a finite difference equation
         function g_vec = getRightPart(obj)
             N = obj.grid.N;
             g_vec = obj.fillBorder(obj.grid);
@@ -77,21 +79,19 @@ classdef ellipticProblemSolver < handle
                                            obj.grid.y(j_in));
         end        
         
-        % func returns solution of finite difference equation,
-        % it is solving by multigrid method
         % PARAM IN:
         %   * nu_1, nu_2 - number of pre- and post-smoothing iterations,
-        %   * level_max  - number of grid,
-        %   * smooth_m   - method of smoothing.
+        %   * level_max  - number of grids,
+        %   * smooth_m   - smoothing method
+        % PARAM_OUT:
+        %   * v - vector of numerical solution, multigrid method
         function v = solveProblemByMG(obj, nu_1, nu_2, level_max, smooth_m)            
             A_mat = obj.A_op.getMatrix(obj.grid);
             g = obj.getRightPart();
             v_prev = obj.fillBorder(obj.grid);
-            v_prev_prev = v_prev;
             
-            % if exact solution is known 
-            % it will be calculated absolute error
-            if ~isempty(obj.u_ex)                 
+            absolute_error_flag = ~isempty(obj.u_ex);
+            if absolute_error_flag
                 u0 = obj.u_ex(obj.grid.x, obj.grid.y);
             end
             
@@ -102,15 +102,16 @@ classdef ellipticProblemSolver < handle
                 v = MultiGrid(obj, A_mat, v_prev, g, 1, nu_1, nu_2, 1,...
                               level_max, smooth_m);
                 if k > 1
-                    obj.rho(k) = norm(v - v_prev)/norm(v_prev - v_prev_prev);                    
+                    rho_numerator = norm(v - v_prev);
+                    obj.rho(k) = rho_numerator/rho_denominator;
                 end
 
-                if ~isempty(obj.u_ex)
+                if absolute_error_flag
                     obj.error(k) = norm(u0 - v);
                 else
                     obj.error(k) = norm(v_prev - v);
                 end
-                v_prev_prev = v_prev;
+                rho_denominator = norm(v - v_prev);
                 v_prev = v;
                 
                 sprintf('k = %d, err = %.2e\n', k, obj.error(k))
@@ -118,18 +119,16 @@ classdef ellipticProblemSolver < handle
             end   
             obj.error = obj.error(1:k-1);
             obj.rho = obj.rho(1:k-1);
-            %param_str = sprintf('Solver_G_%d_l_%d_s_%s_nu_%d',...
-            % obj.grid.N, level_max, smooth_m, nu_1);
-			%save(strcat('mats/', param_str, '.mat'), 'obj');
         end
-            
-        % func returns solution of finite difference equation,
-        % it is solving by some iteration method
+        
         % PARAM IN:
-        %   * method - name of method,
+        %   * method - iteration method,
         %   * omega  - parameter of SOR method
-        function v = solveProblemByIter(obj, method, omega) 
-            if ~isempty(obj.u_ex)
+        % PARAM_OUT:
+        %   * v - vector of numerical solution
+        function v = solveProblemByIter(obj, method, omega)
+            absolute_error_flag = ~isempty(obj.u_ex);
+            if absolute_error_flag
                 u0 = obj.u_ex(obj.grid.x, obj.grid.y);
             end
             
@@ -137,47 +136,43 @@ classdef ellipticProblemSolver < handle
             v_prev = obj.fillBorder(obj.grid);
             g = obj.getRightPart();
             
-            method_func = [];
             if strcmp(method, 'Jacobi')	
                 method_func = @(v_prev) obj.JacobiIter(A_mat, v_prev, g);
-            end
-            if strcmp(method, 'Seidel')
+            elseif strcmp(method, 'Seidel')
                 method_func = @(v_prev) obj.SeidelIter(A_mat, v_prev, g);
-            end
-            if strcmp(method, 'SOR')
+            elseif strcmp(method, 'SOR')
                 method_func = @(v_prev) obj.SORIter(A_mat, v_prev, g, omega);
-            end
-            if isempty(method_func)
-                disp('solveProblemByIter::ERROR: undefined method')
+            else
+                disp('solveProblemByIter::ERROR: undefined iteration method')
+                v = [];
                 return
             end
                                     
-            v_prev_prev = v_prev;            
             obj.error = ones(obj.k_max, 1);	
             obj.rho = zeros(obj.k_max, 1);
             k = 1;
             while k <= obj.k_max && obj.eps < obj.error(max(k-1 ,1))
                 v = method_func(v_prev);
                 if k > 1
-                    obj.rho(k) = norm(v - v_prev)/norm(v_prev - v_prev_prev);                      
+                    rho_numerator = norm(v - v_prev);
+                    obj.rho(k) = rho_numerator/rho_denominator;
                 end
-                v_prev_prev = v_prev;
-                v_prev = v;     
-                if ~isempty(obj.u_ex)                    
+                if absolute_error_flag
                     obj.error(k) = norm(u0 - v);                
                 else
                     obj.error(k) = norm(v_prev - v);                
                 end
-                k = k + 1;
+                rho_denominator = norm(v - v_prev);
+                v_prev = v;
                 if ~rem(k, 100)
-                    sprintf('k = %d, err = %.2e\n', k, obj.error(k-1))
+                    sprintf('k = %d, err = %.2e\n', k, obj.error(k))
                 end
+                k = k + 1;
             end
             obj.error = obj.error(1:k-1);            
             obj.rho = obj.rho(1:k-1);
         end
         
-        % func sets params of solver
         % PARAM IN:
         %   * eps   - accuracy of error,
         %   * k_max - max number of iterations
@@ -186,13 +181,14 @@ classdef ellipticProblemSolver < handle
             obj.k_max = k_max;
         end
         
-        % func returns smoothing solution of the problem Av = g
         % PARAM IN:
         %   * A - matrix of problem,
         %   * v - approximate solution,
         %   * g - right part of equation,
         %   * k - number of smoothing iterations,
         %   * method - method of smoothing
+        % PARAM_OUT:
+        %   * v_s - smoothing solution of the problem Av = g
         v_s = smoothEll(obj, A, v, g, k, method)
     end
     

@@ -21,9 +21,9 @@ u_ex = @(x, y) y.^5'*x.^5;
 border = u_ex;
 
 % task discretization:
-% number of inner nodes by one direction, should be 2^m-1 for integer 'm'
-m = 8;
-N = 2^m-1;
+level = 8;
+% number of inner nodes by one direction
+N = 2^level-1;
 
 % init solver
 Solver = ellipticProblemSolver(center, edge_len, N,...
@@ -38,15 +38,11 @@ Solver.setParams(eps, k_max);
 % solve by miltigrid method
 nu = 3;
 level = 3;
-smooth_ms = cell(3);
-smooth_ms{1} = 'Jacobi';
-smooth_ms{2} = 'Seidel';
-smooth_ms{3} = 'SOR';
+smooth_ms = {'Jacobi', 'Seidel', 'SOR'};
 v = Solver.solveProblemByMG(nu, nu, level, char(smooth_ms{1}));
-
        
 % plot results
-figure(2)
+figure
 subplot(2, 1, 1)
 indx = 1:length(Solver.error);
 semilogy(indx, Solver.error, 'o-')

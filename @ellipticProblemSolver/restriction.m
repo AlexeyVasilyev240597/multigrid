@@ -3,7 +3,7 @@ function d_2h = restriction(d_h)
           1/8, 1/4,  1/8;
          1/16, 1/8, 1/16];
 
-    [N_h, ~] = size(d_h);
+    N_h = size(d_h, 1);
     
     i_h = 1:2:N_h;
     j_h = 1:2:N_h;

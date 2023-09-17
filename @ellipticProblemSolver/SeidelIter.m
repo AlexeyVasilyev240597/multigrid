@@ -1,5 +1,5 @@
 function v = SeidelIter(A, v0, g)
-    [N, ~] = size(v0);
+    N = size(v0, 1);
    
     v = zeros(size(v0));
     v(1, :)   = g(1,   :);

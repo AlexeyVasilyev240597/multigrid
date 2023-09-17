@@ -17,13 +17,12 @@ classdef gridClass < handle
         % step of grid
         h = 0;
         
-        % vectors of nodes of grid
+        % vectors of grid nodes
         x = [];
         y = [];
     end
     
     methods (Access = public)
-        % constructor of class
         % PARAMS IN:
         %   * c   - center of square,
         %   * e_l - edge length,
@@ -32,8 +31,7 @@ classdef gridClass < handle
             obj.center = c;
             obj.edge_len = e_l;            
             
-            %obj.N = 2^(ceil(log2(N+1))) - 1;
-            obj.N = N;
+            obj.N = 2^(ceil(log2(N+1))) - 1;
             
             obj.a = [obj.center(1), obj.center(2)] - obj.edge_len/2;
             obj.b = [obj.center(1), obj.center(2)] + obj.edge_len/2;
@@ -74,7 +72,7 @@ classdef gridClass < handle
             if N_half >= 0
                 grid_2h = gridClass(obj.center, obj.edge_len, N_half);   
             else
-                disp('gridClass::getGrid2h::ERROR: impossible size of grid')
+                disp('gridClass::getGrid2h::ERROR: wrong size of grid')
                 grid_2h = [];
             end
         end
@@ -89,7 +87,3 @@ classdef gridClass < handle
         end
     end
 end
-                
-                
-                
-                

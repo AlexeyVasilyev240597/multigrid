@@ -1,5 +1,5 @@
 function v = SORIter(A, v_prev, g, omega)
-    [N, ~] = size(v_prev);
+    N = size(v_prev, 1);
      
     v = zeros(size(v_prev));
     v(1, :)   = g(1,   :);

@@ -6,7 +6,7 @@ function d_h = prolongation(d_2h)
          1/2,   1, 1/2;
          1/4, 1/2, 1/4];
     
-    [N_2h, ~] = size(d_2h);
+    N_2h = size(d_2h, 1);
     
     N_h = i_h(N_2h);
     N_h = j_h(N_2h);    

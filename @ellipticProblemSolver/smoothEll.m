@@ -1,6 +1,5 @@
 function v_s = smoothEll(obj, A, v, g, k, method)    
 	
-    v_s = [];
     if strcmp(method, 'Jacobi')	
         method_func = @(v_prev) obj.JacobiIter(A, v_prev, g);
     elseif strcmp(method, 'Seidel')
@@ -10,14 +9,13 @@ function v_s = smoothEll(obj, A, v, g, k, method)
         method_func = @(v_prev) obj.SORIter(A, v_prev, g, omega_star);
     else
         disp('smooth::ERROR: undefined method')
+        v_s = [];
         return;
     end
     
-    v_prev = v;
+    v_s = v;
     for kk = 1:k     
-        v_s = method_func(v_prev);
-        v_prev = v_s;
+        v_s = method_func(v_s);
     end 
     
 end
-

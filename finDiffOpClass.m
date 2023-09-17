@@ -4,14 +4,12 @@
 classdef finDiffOpClass < handle
     properties (Access = private)
         % coefficients of equation 
-        % (function with template 'coeff = @(x, y)')
         a_coeff = [];
         b_coeff = [];
         q_coeff = [];       
     end
         
     methods (Access = public)
-        % constructor of class
         function obj = finDiffOpClass(a_coeff, b_coeff, q_coeff)
             obj.a_coeff = a_coeff;
             obj.b_coeff = b_coeff;

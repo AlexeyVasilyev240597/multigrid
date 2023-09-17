@@ -26,16 +26,16 @@ classdef matOfFinDiffOpClass < handle
             obj.d = d;
             obj.e = e;   
             
-            [~, obj.N] = size(a);
+            obj.N = size(a, 2);
             else
-                disp('matOfFinDiffOp::ERROR: Sizes of vectors is not equal')
+                disp('matOfFinDiffOp::ERROR: Sizes of vectors are not equal')
             end
         end
         
         function product = mul(obj, v)
             product = zeros(size(v));
             
-            [~, N_v] = size(v);
+            N_v = size(v, 2);
             if N_v - 2 ~= obj.N
                 disp('matOfFinDiffOp::mul::ERROR: Index dimensions mismatch')
                 return
@@ -57,20 +57,12 @@ classdef matOfFinDiffOpClass < handle
         end
         
         function v = solveSystem(obj, g)
-            if obj.N ~= obj.N
-                disp('matOfFinDiffOp class::solveSistemOneInner::ERROR: number of inner nodes do not equals 1')
-                v = 0;
-                return
-            end
             v = obj.TriDiagMatrixAlgorithm(g);
-            %A = getFullMat();
-            %v = reshape(A\g(:), obj.N + 2, obj.N + 2);
         end        
     end 
     
     methods (Access = private)
         v = TriDiagMatrixAlgorithm(obj, g)
-        A = getFullMat(obj)
     end
     
 end

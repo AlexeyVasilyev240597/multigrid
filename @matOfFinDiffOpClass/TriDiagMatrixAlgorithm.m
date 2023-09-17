@@ -1,7 +1,7 @@
 % func returns the solution of system with finite difference matrix,
 % system is solved by Tridiagonal Matrix Algorithm for pseudo tridiagonal matrix
 function v = TriDiagMatrixAlgorithm(obj, g)
-    [~, N] = size(g);
+    N = size(g, 2);
     % A_i v_{i-1} + B_i v_i + C_i v_{i+1} = g_i
     A = zeros(N, N, N);
     B = zeros(N, N, N);
